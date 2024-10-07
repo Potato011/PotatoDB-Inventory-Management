@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+
+{% block body %}
+<div id="new-item-form" class="new-item-form">
+    <h3>
+        {% if data.type == 'ITEM' and opp == 'MODIFY' %}
+            Item Details
+        {% elif data.type == 'ITEM' and opp == 'ADD' %}
+            Add New Item
+        {% elif data.type == 'BOX' and opp == 'MODIFY' %}
+            Box Details
+        {% elif data.type == 'BOX' and opp == 'ADD' %}
+            Add New Box
+        {% else %}
+            Unknown Operation
+        {% endif %}
+    </h3>
+
+    <!-- Display the error message if it exists -->
+    {% if error %}
+        <p style="color: red;">{{ error }}</p>
+    {% endif %}
+
+    <form method="POST"
+          action="
+              {% if data.type == 'ITEM' and opp == 'MODIFY' %}
+                  /modify/{{ data.id }}
+              {% elif data.type == 'ITEM' and opp == 'ADD' %}
+                  /add/{{ data.type }}
+              {% elif data.type == 'BOX' and opp == 'MODIFY' %}
+                  /modify/{{ data.id }}
+              {% elif data.type == 'BOX' and opp == 'ADD' %}
+                  /add/{{ data.type }}
+              {% else %}
+              {% endif %}
+          "
+          enctype="multipart/form-data"
+          onsubmit="handleWeightInput()"> <!-- Add onsubmit event -->
+
+        {% if opp == 'MODIFY' %}
+            <p><strong>ID: </strong>{{ data.id if data.id is not none else 'None' }}</p>
+            <p><strong>Type: </strong>{{ data.type if data.type is not none else 'None' }}</p>
+            <p><strong>Date Created: </strong>{{ data.date_created if data.date_created is not none else 'None' }}</p>
+            <p><strong>Date Modified: </strong>{{ data.date_modified if data.date_modified is not none else 'None' }}</p>
+            <p><strong>Barcode Number: </strong>{{ data.barcode_num if data.barcode_num is not none else 'None' }}</p>
+            <p><strong>Barcode Path: </strong>{{ data.barcode_path if data.barcode_path is not none else 'None' }}</p>
+            <div>
+                <img src="{{ '../' + data.barcode_path }}" alt="Barcode Image">
+            </div>
+            {% if data.images %}
+                <div class="images-section">
+                    <h4>Uploaded Images:</h4>
+                    {% for image in data.images %}
+                        <div class="image-item">
+                            <img src="{{ '../' + image }}" alt="Uploaded Image" style="max-width: 100px; max-height: 100px;">
+                            <p>Path: {{ image }}</p>
+                            <!-- Delete checkbox for each image -->
+                            <label>
+                                <input type="checkbox" name="delete_images" value="{{ image }}"> Delete
+                            </label>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endif %}
+
+        <label for="name"><strong>Item Name: </strong></label>
+        <input
+                type="text"
+                id="name"
+                name="name"
+                value="{% if data.name %}{{ data.name }}{% endif %}"
+                required
+        ><br><br>
+
+        <label for="description"><strong>Description: </strong></label>
+        <textarea
+                id="description"
+                name="description"
+                required
+        >{% if data.description %}{{ data.description }}{% endif %}</textarea><br><br>
+
+        <label for="weight"><strong>Weight: </strong></label>
+        <input
+                type="number"
+                id="weight"
+                name="weight"
+                value="{% if data.weight %}{{ data.weight }}{% endif %}"
+        ><br><br>
+
+        <label for="parent"><strong>Parent ID: </strong></label>
+        <input
+                type="number"
+                id="parent"
+                name="parent"
+                value="{% if data.parent %}{{ data.parent }}{% endif %}"
+        ><br><br>
+
+        <label for="cost"><strong>Cost: </strong></label>
+        <input
+                type="text"
+                id="cost"
+                name="cost"
+                step="0.01"
+                value="{% if data.cost %}{{ data.cost }}{% endif %}"
+        ><br><br>
+
+        <!-- Add Image Upload -->
+        <label for="images">Add Images:</label>
+        <input
+                type="file"
+                id="images"
+                name="images"
+                accept="image/*"
+                multiple
+        ><br><br>
+
+        <button type="submit">{% if opp == 'MODIFY' %}Update{% else %}Submit{% endif %}</button>
+    </form>
+
+    <!-- Reprint Barcode Button, only shown in MODIFY mode -->
+    {% if opp == 'MODIFY' %}
+        <form method="GET" action="/reprint/{{ data.id }}" style="display: inline;">
+            <button type="submit">Reprint Barcode</button>
+        </form>
+        <form method="POST" action="/add/{{ data.type }}" style="display: inline;">
+            <input type="hidden" name="type" value="{{ data.type }}">
+            <input type="hidden" name="name" value="{{ data.name }}">
+            <input type="hidden" name="description" value="{{ data.description }}">
+            <input type="hidden" name="weight" value="{{ data.weight }}">
+            <input type="hidden" name="parent" value="{{ data.parent }}">
+            <input type="hidden" name="cost" value="{{ data.cost }}">
+
+            <button type="submit">Clone</button>
+        </form>
+    {% endif %}
+</div>
+
+<script>
+    // JavaScript function to handle weight input before form submission
+    function handleWeightInput() {
+        var weightInput = document.getElementById('weight');
+        if (weightInput.value === '') {
+            weightInput.value = 0;
+        }
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PotatoDB v1.1</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/style.css') }}">
+    <link rel="icon" href="{{ url_for('static', path='/images/favicon.png') }}" type="image/png">
+    <script src="https://unpkg.com/htmx.org@1.9.2"></script>
+</head>
+
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <button onclick="window.location.href='/'" class="h2-button">
+                PotatoDB v1.1
+            </button>
+
+            <button class="button" id="new-item" onclick="window.location.href='/new/{{'ITEM'}}'">New Item</button>
+            <button class="button" id="new-box" onclick="window.location.href='/new/{{'BOX'}}'">New Box</button>
+            <button class="button" id="display-all" onclick="window.location.href='/display-all'">Display All</button>
+
+            <!-- Search Bar Section -->
+            <div class="search-section">
+                <input type="text" id="barcode-input" class="search-bar" placeholder="Search..." autofocus />
+            </div>
+
+            <button class="button" id="search-button" onclick="performSearch()">Search</button>
+
+            <div class="stats">
+                <h3>Stats</h3>
+                <p>Box: {{ stats.box_count }}</p>
+                <p>Items: {{ stats.item_count }}</p>
+                <p>Last Scan: {{ stats.last_scan }}</p>
+                <p>Last Edit: {{ stats.last_edit }}</p>
+                <p>Scanner: {{ stats.scanner }}</p>
+                <p>Printer: {{ stats.printer }}</p>
+            </div>
+        </div>
+        <div class="main">
+            <div class="header">
+                <div class="box-info">
+                    <p>
+                        {% if parent.type == 'BOX' %}
+                            <strong>Box Name: </strong>{% if parent.name %}{{ parent.name }}{% else %}N/A{% endif %}
+                        {% elif parent.type == 'ITEM' %}
+                            <strong>Item Name: </strong>{% if parent.name %}{{ parent.name }}{% else %}N/A{% endif %}
+                        {% else %}
+                            <strong>Name: </strong>{% if parent.name %}{{ parent.name }}{% else %}N/A{% endif %}
+                        {% endif %}
+                    </p>
+                    <p>
+                        {% if parent.type == 'BOX' %}
+                            <strong>Box ID: </strong>{% if parent.id %}{{ parent.id }}{% else %}N/A{% endif %}
+                        {% elif parent.type == 'ITEM' %}
+                            <strong>Item ID: </strong>{% if parent.id %}{{ parent.id }}{% else %}N/A{% endif %}
+                        {% else %}
+                            <strong>ID: </strong>{% if parent.id %}{{ parent.id }}{% else %}N/A{% endif %}
+                        {% endif %}
+                    </p>
+
+                </div>
+                <div>
+                    <p><strong>Last Scanned Item: </strong>{{ stats.last_scanned }}</p>
+                    {% if headerError %}
+                        <p style="color: red;">{{ headerError }}</p>
+                    {% endif %}
+                </div>
+                <button class="icon-btn" id="screen-settings">
+                    <img src="{{ url_for('static', path='/images/gears-icon.png') }}" alt="Settings" width="40" height="40">
+                </button>
+                <button class="icon-btn" id="dark-mode-toggle">
+                    <img src="{{ url_for('static', path='/images/lightbulb-icon.png') }}" alt="Screen" width="40" height="40">
+                </button>
+            </div>
+
+            <div class="body">
+                {% block body %}
+                <!-- This block will be overridden in child templates -->
+                {% endblock %}
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript to handle barcode scanning, focus, and dark mode toggle -->
+    <script>
+    // JavaScript to handle dark mode toggle
+    const toggleButton = document.getElementById('dark-mode-toggle');
+    toggleButton.addEventListener('click', () => {
+        document.body.classList.toggle('dark-mode');
+    });
+
+    // JavaScript to handle barcode scanner input
+    document.addEventListener('DOMContentLoaded', function() {
+        const barcodeInput = document.getElementById('barcode-input');
+        let barcodeValue = '';
+
+        // Focus the search bar when the page loads
+        barcodeInput.focus();
+
+        // Ensure the search bar is focused when the page shows from history (back button)
+        window.addEventListener('pageshow', () => {
+            barcodeInput.focus();
+        });
+
+        document.addEventListener('keypress', function(event) {
+            // Check if the current page is add.html
+            if (window.location.pathname.includes('/new') || window.location.pathname.includes('/modify')) {
+                return; // If on add.html or modify.html page, do nothing
+            }
+
+            // Check for Enter key press to complete barcode input
+            if (event.key === 'Enter') {
+                barcodeInput.value = barcodeValue; // Put barcode into input field
+                performSearch(); // Trigger search
+                barcodeValue = ''; // Clear for next scan
+            } else {
+                // Append character to barcode value
+                barcodeValue += event.key;
+            }
+        });
+    });
+
+    // Function to perform search using the barcode
+    function performSearch() {
+        const barcodeValue = document.getElementById('barcode-input').value;
+        if (barcodeValue) {
+            // Redirect to the search URL
+            window.location.href = `/search/${barcodeValue}`;
+        }
+    }
+</script>
+
+</body>
+</html>

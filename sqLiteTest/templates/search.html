@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block body %}
+<h1>Item List</h1>
+<div id="item-list" class="box-list">
+    {% for item in data %}
+    <div class="box-item">
+        {% if item.type == 'BOX' %}
+        <div class="emoji-icon">🍱</div>
+        {% else %}
+        <div class="emoji-icon">📦</div>
+        {% endif %}
+        <div class="card-details">
+            <p><strong>Item Name:</strong> {{ item.name }}</p>
+            <p><strong>Item ID:</strong> {{ item.id }}</p>
+            <p><strong>Date Created:</strong> {{ item.date_created }}</p>
+        </div>
+
+        {% if item.id != 1 %}
+        <div class="box-buttons">
+            <button class="button" id="delete-box" onclick="window.location.href='/delete/{{ item.id }}'">Delete Box</button>
+            <button class="button" id="modify-box" onclick="window.location.href='/modify/{{ item.id }}'">See Details</button>
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+
+{% endblock %}

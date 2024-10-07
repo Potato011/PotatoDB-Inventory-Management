@@ -1,0 +1,185 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #f4f4f4;
+}
+
+.container {
+    display: flex;
+    width: 90%;
+    height: 90%;
+    background-color: #fff;
+    border: 1px solid #ccc;
+}
+
+.sidebar {
+    width: 20%;
+    padding: 20px;
+    background-color: #eaeaea;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+    overflow: auto;
+}
+
+.sidebar h2 {
+    margin: 0;
+    padding: 10px 0;
+    font-size: 1.5em;
+}
+
+.button {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    background-color: #ccc;
+    border: none;
+    cursor: pointer;
+    transition-duration: 0.4s;
+}
+
+.button:hover {
+    background-color: #bbb; /* Darken the background color */
+    color: #fff; /* Change the text color */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Add a shadow effect */
+    transform: scale(1.02); /* Slightly enlarge the button */
+}
+
+.stats {
+    margin-top: 20px;
+}
+
+.stats h3 {
+    margin-bottom: 10px;
+}
+
+.main {
+    width: 80%;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    height: 80vh; /* Full viewport height */
+    box-sizing: border-box; /* Include padding in the height */
+    overflow: auto; /* Prevent overflow in the main container */
+}
+
+.body {
+    flex: 1; /* Allows the body to fill the remaining space */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* Prevents overflow inside the body */
+    max-height: 100%; /* Ensure it does not exceed the parent's height */
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.box-info {
+    margin-right: auto; /* Pushes the settings and screen buttons to the right */
+    padding-left: 10px; /* Adds some space from the left edge */
+}
+
+.box-info p {
+    margin: 0;
+    font-size: 1em;
+}
+
+.icon-btn {
+    background: transparent;
+    border: none;
+    font-size: 1.5em;
+    cursor: pointer;
+}
+
+.box-list {
+    flex: 1; /* Allows the box-list to take up space within the body */
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    height: 50%; /* Set the height to half of the parent container's height */
+    overflow: auto; /* Enable vertical scrolling */
+    border-top: 1px solid #ccc; /* Optional: Add a border to separate content */
+    padding: 10px; /* Optional: Add padding inside the box list */
+}
+
+
+.box-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between; /* Place elements on opposite sides */
+    padding: 1px;
+    border: 1px solid #ccc;
+    background-color: #f9f9f9;
+    padding-left: 10px;
+}
+
+.box-buttons {
+    display: flex;
+    flex-direction: column; /* Stack buttons vertically */
+    margin-left: auto; /* Align the buttons to the right */
+    gap: 1px; /* Optional: add spacing between buttons */
+    padding-right: 10px; /* Add padding to the right edge */
+}
+
+.emoji-icon {
+    font-size: 2em;
+    margin-right: 10px;
+}
+
+.card-details p {
+    margin: 0;
+}
+
+/* Remove background and border of buttons in .card-details */
+.card-details button {
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: inherit;
+    cursor: pointer;
+    font-side: 1.1em;
+    transition-duration: 0.4s;
+}
+
+.card-details button:hover {
+    font-weight: bold; /* Make text bold */
+    text-decoration: underline; /* Underline the text */
+}
+
+
+/* style.css */
+.search-bar {
+    width: 100%; /* Set width to match other buttons */
+    padding: 10px; /* Add padding to make the input area larger */
+    font-size: 16px; /* Increase font size */
+    border: 1px solid #ccc; /* Optional: Add a border */
+    border-radius: 5px; /* Optional: Add rounded corners */
+    box-sizing: border-box; /* Include padding in the total width */
+    margin: 10px 0; /* Add some margin for spacing */
+}
+
+.new-item-form {
+    overflow: auto; /* Prevent overflow in the main container */
+}
+
+.h2-button {
+    border: none;
+    background: none;
+    font-size: 2em;
+    font-weight: bold;
+    cursor: pointer;
+    color: inherit;
+    padding: 0;
+    margin: 0;
+}
+
+.h2-button:hover {
+    text-decoration: underline;
+}
