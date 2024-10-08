@@ -29,6 +29,7 @@ total_items = 0
 
 # Global variable to keep track of the last scanned single item
 last_single_item_id = None
+last_action = None
 
 
 def setup_database():
@@ -173,11 +174,10 @@ def is_circular_dependency(connection, potential_parent_id, child_id):
     return is_circular_dependency(connection, potential_parent_id, parent_id[0])
 
 
-import re
-
-def get_unique_name(connection, base_name):
+def get_unique_name(connection, base_name, base_id):
+    print("unique name inputs: ", base_name, base_id)
     cursor = connection.cursor()
-    cursor.execute('SELECT NAME FROM storage WHERE NAME LIKE ?', (f'{base_name}%',))
+    cursor.execute('SELECT NAME, FIND FROM storage WHERE NAME LIKE ?', (f'{base_name}%',))
     existing_names = cursor.fetchall()
 
     # Print the existing names for debugging purposes
@@ -185,7 +185,13 @@ def get_unique_name(connection, base_name):
 
     # If there are no matching names, return the base_name unchanged
     if not existing_names:
+        print("returning original name")
         return base_name
+
+    # Check if the stored_id matches the base_id and names are identical (case-insensitive)
+    for name, stored_id in existing_names:
+        if stored_id == base_id and name.lower() == base_name.lower():
+            return base_name
 
     # Regular expression to match names in the format: name, name(1), name(2), etc.
     base_pattern = re.compile(rf'^{re.escape(base_name)}\((\d+)\)$')
@@ -200,19 +206,31 @@ def get_unique_name(connection, base_name):
         base_name_without_number = base_name
         base_number = 0
 
-    # Find the highest number in the existing names
-    max_number = base_number
-    for name_tuple in existing_names:
-        name = name_tuple[0]
+    # Find all the numbers in the existing names
+    existing_numbers = set()
+    for loop_index, (name_tuple, name_id) in enumerate(existing_names, start=1):
+        name = name_tuple
         match = base_pattern.search(name)
+
+        # Print the loop number
+        print(f"Loop number: {loop_index}")
+
         if match:
-            number = int(match.group(1))
-            if number > max_number:
-                max_number = number
+            # Print all captured groups for debugging purposes
+            print("Match found:", match.group(0))  # Full match
+            print("All groups:", match.groups())  # Prints all groups in a tuple
 
-    # Return the base_name without the old number with the next number appended
-    return f"{base_name_without_number}({max_number + 1})"
+            if name_id != base_id:  # Ensure name_id is not equal to base_id
+                number = int(match.group(1))  # Assuming the first group captures a number
+                existing_numbers.add(number)
 
+    # Find the smallest missing number starting from 1
+    min_number = 1
+    while min_number in existing_numbers:
+        min_number += 1
+
+    # Return the base_name without the old number, with the next smallest number appended
+    return f"{base_name_without_number}({min_number})"
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -371,9 +389,6 @@ async def add_item(
 
         stats = get_stats(cursor)
 
-        # Ensure the name is unique
-        name = get_unique_name(connection, name)
-
         # Check if the parent ID exists and is of type 'BOX'
         cursor.execute('SELECT FIND, TYPE FROM storage WHERE FIND = ? AND TYPE = "BOX";', (parent,))
         parent_record = cursor.fetchone()
@@ -426,6 +441,9 @@ async def add_item(
         # Generate a unique FIND value
         find = get_unique_find(connection)
         current_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        # Ensure the name is unique
+        name = get_unique_name(connection, name, find)
 
         # Generate a unique barcode using the FIND value and get its image path
         barcode_image_path, barcode_number = get_barcodes(find)
@@ -540,8 +558,10 @@ async def modify_item_submit(
         cursor.execute('SELECT IMG_PATH FROM storage WHERE FIND = ?', (item_id,))
         current_item = cursor.fetchone()
 
+        print("starting unique name")
         # Ensure the name is unique
-        name = get_unique_name(connection, name)
+        name = get_unique_name(connection, name, item_id)
+        print("modified name: ", name)
 
         if not current_item:
             return HTMLResponse(content="Item not found.", status_code=404)
@@ -702,9 +722,13 @@ async def search_item(request: Request, item_id: str):
     try:
         # Remove leading zeros from the item_id
         stripped_item_id = item_id.lstrip('0')
-        print("stripped id: ", stripped_item_id)
+        #print("stripped id: ", stripped_item_id)
         connection = sqlite3.connect(DB_PATH)
         cursor = connection.cursor()
+
+        stats = get_stats(cursor)
+        scan_error = None
+        search_error = None
 
         # Check if the item ID is numeric, indicating a barcode or ID search
         if stripped_item_id.isdigit():
@@ -716,13 +740,20 @@ async def search_item(request: Request, item_id: str):
 
         result = cursor.fetchall()
 
+        item_data = []
+
         if not result:
             connection.close()
             print("Item/box not found.")
-            return HTMLResponse(content="Item not found.", status_code=404)
+            search_error = f"{item_id} does not exist"
+            return templates.TemplateResponse('homepage.html', {
+                'request': request,
+                'stats': stats,
+                'data': item_data,
+                'parent': item_data,
+                'searchError': search_error
+            })
 
-        # Prepare the item data list
-        item_data = []
         for column in result:
             # Deserialize image paths if they exist
             image_paths = deserialize_image_paths(column[10]) if len(column) > 10 and column[10] else []
@@ -742,9 +773,6 @@ async def search_item(request: Request, item_id: str):
                 'images': image_paths,
                 'cost': column[11] if len(column) > 11 else None
             })
-
-        stats = get_stats(cursor)
-        scan_error = None
 
         # Handle the case where there is exactly one item in the search result
         if len(result) == 1:
